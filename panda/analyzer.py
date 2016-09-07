@@ -7,7 +7,8 @@ class Analyzer:
 
 
 def calc_daily_returns(wealth):
-    return np.log(wealth / wealth.shift(1))
+    # return np.log(wealth / wealth.shift(1))
+    return wealth / wealth.shift(1) - 1
 
 
 def calc_annual_returns(daily_returns):
@@ -16,7 +17,7 @@ def calc_annual_returns(daily_returns):
     return grouped
 
 
-def calc_portfolio_var(returns, weights=None):
+def calc_portfolio_var(returns, n, weights=None):
     if weights is None:
         weights = np.ones(returns.columns.size) / \
         returns.columns.size
@@ -25,24 +26,21 @@ def calc_portfolio_var(returns, weights=None):
     return var
 
 
-def sharpe_ratio(returns, weights = None, risk_free_rate = 0.0):
-    n = returns.columns.size
-    if weights is None: weights = np.ones(n)/n
+def sharpe_ratio(returns, risk_free_rate = 0.0):
     # get the portfolio variance
-    var = calc_portfolio_var(returns, weights)
+    # var = calc_portfolio_var(returns,n, weights)
     # and the means of the stocks in the portfolio
     means = returns.mean()
+    var = returns.var()
     # and return the sharpe ratio
-    return (means.dot(weights) - risk_free_rate)/np.sqrt(var)
+    return (means - risk_free_rate)/np.sqrt(var)
 
 
 def analyze(wealth):
     daily_returns = calc_daily_returns(wealth)
 
     annual_returns = calc_annual_returns(daily_returns)
-    annual_returns.to_csv("annual_returns.csv")
+    # annual_returns.to_csv("annual_returns.csv")
+    sharpe_ratio_result = sharpe_ratio(daily_returns) * np.sqrt(252)
 
-    n = len(wealth.columns.index)
-    sharpe_ratio_result = sharpe_ratio(daily_returns)  * np.sqrt(n)
-
-    print "sharp", sharpe_ratio_result, "\n", annual_returns
+    print "sharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns
