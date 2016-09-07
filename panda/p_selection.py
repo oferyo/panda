@@ -1,7 +1,12 @@
+import string
+
+import finsymbols
 import pandas as pd
 import numpy as np
 from pandas_datareader import data, wb
 import datetime
+
+from panda import analyzer
 
 
 class Portfolio:
@@ -43,6 +48,7 @@ class Portfolio:
         # merged.to_csv("sd1.csv")
         # self.stocks_data.to_csv("sd2.csv")
         self.data = merged
+        analyzer.analyze(self.total_wealth)
         print "end init portfolio cash ", self.cash
 
     def calc_wealth(self):
@@ -83,14 +89,19 @@ class Portfolio:
 
 
 def main():
+
     xx = np.random.random((3,3))
     yy= np.max(xx, axis=0) + 1
 
-    symbols = ['AAPL', 'IBM']
+    sp500 = finsymbols.get_sp500_symbols()
+
+    symbols = [sp500[0]["symbol"], sp500[1]["symbol"]]
+    # symbols = ['AAPL', 'IBM']
     initial_wealth = 100000
     start_time = datetime.datetime(2010, 10, 1)
     end_time = datetime.datetime(2012, 10, 8)
     portfolio = Portfolio(symbols, initial_wealth)
+
     portfolio.init_portfolio(start_time, end_time)
     portfolio.calc_wealth()
 
