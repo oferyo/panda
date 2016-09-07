@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2b20b519-5fd6-4717-9943-ec40627220da" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/panda/analyzer.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/panda/all_data.csv" afterPath="$PROJECT_DIR$/panda/all_data.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/panda/p_selection.py" afterPath="$PROJECT_DIR$/panda/p_selection.py" />
     </list>
     <ignored path="Panda.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -444,7 +441,14 @@
       <option name="project" value="LOCAL" />
       <updated>1472808352596</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="panda">
+      <created>1473237868599</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1473237868599</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="ToolWindowManager">
