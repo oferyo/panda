@@ -17,6 +17,10 @@ def calc_annual_returns(daily_returns):
     return grouped
 
 
+def calc_max_draw_down():
+    pass
+
+
 def calc_portfolio_var(returns, n, weights=None):
     if weights is None:
         weights = np.ones(returns.columns.size) / \
@@ -27,12 +31,8 @@ def calc_portfolio_var(returns, n, weights=None):
 
 
 def sharpe_ratio(returns, risk_free_rate = 0.0):
-    # get the portfolio variance
-    # var = calc_portfolio_var(returns,n, weights)
-    # and the means of the stocks in the portfolio
     means = returns.mean()
     var = returns.var()
-    # and return the sharpe ratio
     return (means - risk_free_rate)/np.sqrt(var)
 
 
