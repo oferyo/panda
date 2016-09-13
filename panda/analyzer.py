@@ -12,10 +12,14 @@ def calc_daily_returns(wealth):
 
 
 def calc_annual_returns(daily_returns):
-    grouped = np.exp(daily_returns.groupby(
-        lambda date: date.year).sum())-1
+    grouped = daily_returns.groupby(lambda date: date.year).sum()
     return grouped
 
+def calc_annual_sharp(daily_returns):
+    group = daily_returns.groupby(lambda date: date.year)
+    grouped_mean = group.mean()
+    grouped_var = group.var()
+    return (grouped_mean / np.sqrt(grouped_var)) * np.sqrt(252)
 
 def calc_max_draw_down():
     pass
@@ -36,11 +40,14 @@ def sharpe_ratio(returns, risk_free_rate = 0.0):
     return (means - risk_free_rate)/np.sqrt(var)
 
 
-def analyze(wealth):
+def analyze(name, wealth):
     daily_returns = calc_daily_returns(wealth)
 
     annual_returns = calc_annual_returns(daily_returns)
     # annual_returns.to_csv("annual_returns.csv")
     sharpe_ratio_result = sharpe_ratio(daily_returns) * np.sqrt(252)
+    annual_sharp = calc_annual_sharp(daily_returns)
 
-    print "sharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns
+    print 'analyzer name::', name, "\tsharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns, '\nannual_sharp::\n', annual_sharp
+
+    print 'end analyzer name::', name

@@ -6,6 +6,7 @@ import datetime
 from panda import analyzer
 
 
+
 class Portfolio:
 
     def __init__(self, stocks_data, initial_wealth):
@@ -19,17 +20,14 @@ class Portfolio:
         self.wealth = self.quantities * stocks_data[0:]
         self.total_wealth = self.wealth.apply(lambda x : np.sum(x), axis = 1, raw=False)
         self.total_wealth.name = 'total_wealth  '
-        analyzer.analyze(self.total_wealth)
+        analyzer.analyze('buy_and_hold', self.total_wealth)
         print "end init portfolio cash ", self.cash
 
     @staticmethod
     def set_fractions(num_symbols):
         return np.squeeze(np.ones((1, num_symbols), float) / num_symbols)
 
-    def calc_wealth(self, stocks_data):
-        fees = 0.005
-        min_fees = 1
-        current_wealth = self.initial_wealth
+    def calc_wealth(self, stocks_data, reb_period = 1, partial_param = 1):
         len_data = len(stocks_data.index)
         current_quantities = self.quantities
         all_quantities = self.wealth.copy()
@@ -42,18 +40,28 @@ class Portfolio:
             rebalanced_wealth[i: i + 1] = current_quantities * row_values
             current_wealth = np.sum(rebalanced_wealth[i: i + 1].values) + self.cash
             total_rebalanced[i : i+1] = current_wealth
-            current_quantities = np.floor((current_wealth * self.fractions) * np.array(1.0 / np.squeeze(row_values)))
+            updated_quantities = np.floor((current_wealth * self.fractions) * np.array(1.0 / np.squeeze(row_values)))
+            self.pay_fees(current_quantities, updated_quantities)
+            current_quantities = updated_quantities
             all_quantities[i : i+1] = [current_quantities]
             change = current_wealth - np.sum((current_quantities * row_values))
             self.cash = change
 
         print 'end rebalance'
-        analyzer.analyze(total_rebalanced)
+        analyzer.analyze('rebalnce', total_rebalanced)
 
         # self.data = self.data.join(all_quantities)
         # self.data = self.data.join(total_rebalanced)
         # self.data.to_csv("all_data.csv")
         print "end cash", self.cash
+
+    def pay_fees(self, current_quantities, updated_quantities):
+        fees_per_share = 0.005
+        min_fees = 1
+        num_shares = np.sum(np.abs(current_quantities - updated_quantities))
+        if num_shares > 0:
+            fees_to_pay = np.min((min_fees, num_shares*fees_per_share))
+            self.cash-= fees_to_pay
 
 
 def get_and_clean_data(symbols, start_time, end_time):
@@ -71,15 +79,7 @@ def get_and_clean_data(symbols, start_time, end_time):
     return stocks_data
 
 
-def main():
-    start_time = datetime.datetime(1980, 10, 1)
-    end_time = datetime.datetime(2016, 10, 8)
-
-    # all_stocks = finsymbols.get_sp500_symbols()
-    all_stocks = finsymbols.get_sp500_symbols()
-    all_stocks.append(finsymbols.get_nasdaq_symbols())
-    all_stocks.append(finsymbols.get_nyse_symbols())
-
+def run_round(all_stocks, start_time, end_time):
     symbol_len = 30
     symbols = []
     symbols_set = set()
@@ -98,7 +98,23 @@ def main():
     portfolio = Portfolio(stocks_data, initial_wealth)
     portfolio.calc_wealth(stocks_data)
 
-    print "the end"
+
+
+def main():
+    start_time = datetime.datetime(1980, 10, 1)
+    end_time = datetime.datetime(2016, 10, 8)
+
+    # all_stocks = finsymbols.get_sp500_symbols()
+    all_stocks = finsymbols.get_sp500_symbols()
+    all_stocks.append(finsymbols.get_nasdaq_symbols())
+    all_stocks.append(finsymbols.get_nyse_symbols())
+
+    for j in range(10):
+        print 'start_round\t', j
+        run_round(all_stocks, start_time, end_time)
+        print 'end_round\t', j
+
+    print "the one end"
 
 if __name__ == "__main__":
     # execute only if run as a script
