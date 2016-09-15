@@ -48,6 +48,6 @@ def analyze(name, wealth):
     sharpe_ratio_result = sharpe_ratio(daily_returns) * np.sqrt(252)
     annual_sharp = calc_annual_sharp(daily_returns)
 
-    print 'analyzer name::', name, "\tsharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns, '\nannual_sharp::\n', annual_sharp
+    # print 'analyzer name::', name, "\tsharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns, '\nannual_sharp::\n', annual_sharp
 
-    print 'end analyzer name::', name
+    print 'end analyzer name::', name, '\tsharp\t', sharpe_ratio_result
