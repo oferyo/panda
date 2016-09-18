@@ -68,7 +68,6 @@ class Portfolio:
                 # print 'paid fees ', fees_to_pay,  'num_shares', num_shares, 'cash', (self.cash - fees_to_pay)
                 self.cash -= fees_to_pay
 
-
 def get_and_clean_data(symbols, start_time, end_time):
     stocks_data = data.get_data_yahoo(symbols, start=start_time, end=end_time)['Adj Close']
     len_data = len(stocks_data.index)
@@ -86,7 +85,7 @@ def get_and_clean_data(symbols, start_time, end_time):
 
 def run_round(all_stocks, start_time, end_time):
     # symbol_len = 20
-    symbol_len = 10
+    symbol_len = 20
     symbols = []
     symbols_set = set()
     for j in range(symbol_len):
@@ -104,13 +103,17 @@ def run_round(all_stocks, start_time, end_time):
     portfolio = Portfolio(stocks_data, initial_wealth)
     portfolio.analyzer_buy_and_hold()
     portfolio.calc_wealth(stocks_data, 0.0, 0.0)
-    portfolio.calc_wealth(stocks_data)
 
-
+    print 'start with fees'
     portfolio = Portfolio(stocks_data, initial_wealth)
     portfolio.calc_wealth(stocks_data)
 
     print 'end_round'
+
+def init():
+    global sum
+    sum = 0
+
 
 def main():
 
