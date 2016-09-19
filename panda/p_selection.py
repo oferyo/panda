@@ -2,14 +2,15 @@ import finsymbols
 import numpy as np
 from pandas_datareader import data, wb
 import datetime
-
 from panda import analyzer
+from panda.Logger import my_logger
 
-
+logger = my_logger("panda")
 
 class Portfolio:
 
     def __init__(self, stocks_data, initial_wealth):
+        logger.info("init start")
         num_symbols = stocks_data.columns.size
         self.fractions = self.set_fractions(num_symbols)
         self.initial_wealth = initial_wealth
@@ -46,8 +47,13 @@ class Portfolio:
             # print 'current_wealth ', current_wealth, 'cash', self.cash
             total_rebalanced[i : i+1] = current_wealth
             updated_quantities = np.floor((current_wealth * self.fractions) * np.array(1.0 / np.squeeze(row_values)))
+            # logging.info("uq1 %s cq %s ", updated_quantities, current_quantities)
+            updated_quantities = np.floor(updated_quantities*partial_param + (1.0 - partial_param)*current_quantities)
+            # logging.info("uq2 %s", updated_quantities)
+
             # print 'cq', current_quantities, 'uq', updated_quantities, 'v', np.squeeze(row_values)
             change = current_wealth - np.sum((updated_quantities * row_values))
+            # logging.info("change %s", change)
             self.cash = change
             self.pay_fees(current_quantities, updated_quantities, fees_per_share, min_fees)
             current_quantities = updated_quantities
@@ -67,6 +73,7 @@ class Portfolio:
             if fees_to_pay > 0.00001:
                 # print 'paid fees ', fees_to_pay,  'num_shares', num_shares, 'cash', (self.cash - fees_to_pay)
                 self.cash -= fees_to_pay
+
 
 def get_and_clean_data(symbols, start_time, end_time):
     stocks_data = data.get_data_yahoo(symbols, start=start_time, end=end_time)['Adj Close']
@@ -102,13 +109,25 @@ def run_round(all_stocks, start_time, end_time):
     stocks_data = get_and_clean_data(symbols, start_time, end_time)
     portfolio = Portfolio(stocks_data, initial_wealth)
     portfolio.analyzer_buy_and_hold()
+    fees = 0.01
+
+    logger.info('start no fees D=1')
     portfolio.calc_wealth(stocks_data, 0.0, 0.0)
 
-    print 'start with fees'
+    logger.info('start with fees D=1')
     portfolio = Portfolio(stocks_data, initial_wealth)
-    portfolio.calc_wealth(stocks_data)
+    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 1.0)
 
-    print 'end_round'
+    logger.info('start with fees D=0.5')
+    portfolio = Portfolio(stocks_data, initial_wealth)
+    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.5)
+
+    logger.info('start with fees D=0.01')
+    portfolio = Portfolio(stocks_data, initial_wealth)
+    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.5)
+
+
+    logger.info("the end")
 
 def init():
     global sum
@@ -117,6 +136,7 @@ def init():
 
 def main():
 
+    # start_time = datetime.datetime(1980, 10, 1)
     # start_time = datetime.datetime(1980, 10, 1)
     start_time = datetime.datetime(1980, 10, 1)
     end_time = datetime.datetime(2016, 10, 8)
@@ -129,6 +149,7 @@ def main():
 
     for j in range(5):
         print 'start_round\t', j
+        logger.info('start round %s', j)
         run_round(all_stocks, start_time, end_time)
         print 'end_round\t', j
 

@@ -1,5 +1,9 @@
 import numpy as np
 
+from panda.Logger import my_logger
+
+logger = my_logger("panda")
+
 
 class Analyzer:
     def __init__(self):
@@ -50,4 +54,4 @@ def analyze(name, wealth):
 
     # print 'analyzer name::', name, "\tsharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns, '\nannual_sharp::\n', annual_sharp
 
-    print 'end analyzer name::', name, '\tsharp\t', sharpe_ratio_result
+    logger.info('end analyzer name::%s\t sharp %s\t', name, sharpe_ratio_result)

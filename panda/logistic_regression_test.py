@@ -7,6 +7,6 @@ from sklearn import datasets
 
 clf = linear_model.LogisticRegression()
 
-clf.fit(X, y, )
+# clf.fit(X, y, )
 
 # clf.pre
