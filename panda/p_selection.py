@@ -1,11 +1,13 @@
 import finsymbols
 import numpy as np
+import pandas as pd
 from pandas_datareader import data, wb
 import datetime
 from panda import analyzer
 from panda.Logger import my_logger
 
 logger = my_logger("panda")
+
 
 class Portfolio:
 
@@ -23,7 +25,6 @@ class Portfolio:
         self.total_wealth.name = 'total_wealth  '
         print "end init portfolio cash ", self.cash
 
-
     def analyzer_buy_and_hold(self):
         analyzer.analyze('buy_and_hold', self.total_wealth)
 
@@ -31,7 +32,6 @@ class Portfolio:
     @staticmethod
     def set_fractions(num_symbols):
         return np.squeeze(np.ones((1, num_symbols), float) / num_symbols)
-
 
     def calc_wealth(self, stocks_data, fees_per_share = 0.005, min_fees = 1, reb_period = 1, partial_param = 1):
         len_data = len(stocks_data.index)
@@ -108,6 +108,7 @@ def run_round(all_stocks, start_time, end_time):
     initial_wealth = 100000
     stocks_data = get_and_clean_data(symbols, start_time, end_time)
     portfolio = Portfolio(stocks_data, initial_wealth)
+
     portfolio.analyzer_buy_and_hold()
     fees = 0.01
 
@@ -134,7 +135,28 @@ def init():
     sum = 0
 
 
+def log_loss(label, pred):
+    return -np.mean(label*np.log(pred[:,0]) + (1 - label) * np.log(1.0 - pred[:,0]))
+
+
+class Metric:
+
+    def __init__(self, func):
+        self.f = func
+
+    def activate(self, x, y):
+        return self.f(x,y)
+
+
+
+def foo(x, y):
+    return x+y
+
+
 def main():
+
+    metric = Metric(foo)
+    z = metric.activate(44, 44)
 
     # start_time = datetime.datetime(1980, 10, 1)
     # start_time = datetime.datetime(1980, 10, 1)

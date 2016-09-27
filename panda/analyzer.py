@@ -1,5 +1,5 @@
 import numpy as np
-
+import pandas as pd
 from panda.Logger import my_logger
 
 logger = my_logger("panda")
@@ -15,15 +15,24 @@ def calc_daily_returns(wealth):
     return wealth / wealth.shift(1) - 1
 
 
+def calc_growth_rate(wealth):
+    # return np.log(wealth / wealth.shift(1))
+    # first_date = pd.to_datetime(wealth[0])
+    # logger.info("first_date %s", first_date)
+    return np.log(wealth / wealth[0])
+
+
 def calc_annual_returns(daily_returns):
     grouped = daily_returns.groupby(lambda date: date.year).sum()
     return grouped
+
 
 def calc_annual_sharp(daily_returns):
     group = daily_returns.groupby(lambda date: date.year)
     grouped_mean = group.mean()
     grouped_var = group.var()
     return (grouped_mean / np.sqrt(grouped_var)) * np.sqrt(252)
+
 
 def calc_max_draw_down():
     pass
@@ -38,7 +47,7 @@ def calc_portfolio_var(returns, n, weights=None):
     return var
 
 
-def sharpe_ratio(returns, risk_free_rate = 0.0):
+def sharpe_ratio(returns, risk_free_rate=0.0):
     means = returns.mean()
     var = returns.var()
     return (means - risk_free_rate)/np.sqrt(var)
@@ -47,7 +56,14 @@ def sharpe_ratio(returns, risk_free_rate = 0.0):
 def analyze(name, wealth):
     daily_returns = calc_daily_returns(wealth)
 
+    g_r = calc_growth_rate(wealth)
+
+    g_r.to_csv("g_r.csv")
+
+    logger.info("g_r %s", g_r)
     annual_returns = calc_annual_returns(daily_returns)
+
+
     # annual_returns.to_csv("annual_returns.csv")
     sharpe_ratio_result = sharpe_ratio(daily_returns) * np.sqrt(252)
     annual_sharp = calc_annual_sharp(daily_returns)
