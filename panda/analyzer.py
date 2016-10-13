@@ -16,9 +16,6 @@ def calc_daily_returns(wealth):
 
 
 def calc_growth_rate(wealth):
-    # return np.log(wealth / wealth.shift(1))
-    # first_date = pd.to_datetime(wealth[0])
-    # logger.info("first_date %s", first_date)
     return np.log(wealth / wealth[0])
 
 
@@ -41,8 +38,8 @@ def calc_max_draw_down():
 def calc_portfolio_var(returns, n, weights=None):
     if weights is None:
         weights = np.ones(returns.columns.size) / \
-        returns.columns.size
-    sigma = np.cov(returns.T,ddof=0)
+                  returns.columns.size
+    sigma = np.cov(returns.T, ddof=0)
     var = (weights * sigma * weights.T).sum()
     return var
 
@@ -50,24 +47,9 @@ def calc_portfolio_var(returns, n, weights=None):
 def sharpe_ratio(returns, risk_free_rate=0.0):
     means = returns.mean()
     var = returns.var()
-    return (means - risk_free_rate)/np.sqrt(var)
+    return (means - risk_free_rate) / np.sqrt(var)
 
-
-def analyze(name, wealth):
-    daily_returns = calc_daily_returns(wealth)
-
+def analyze(name, wealth, growth_result):
     g_r = calc_growth_rate(wealth)
-
-    g_r.to_csv("g_r.csv")
-
-    logger.info("g_r %s", g_r)
-    annual_returns = calc_annual_returns(daily_returns)
-
-
-    # annual_returns.to_csv("annual_returns.csv")
-    sharpe_ratio_result = sharpe_ratio(daily_returns) * np.sqrt(252)
-    annual_sharp = calc_annual_sharp(daily_returns)
-
-    # print 'analyzer name::', name, "\tsharp", sharpe_ratio_result, "\nannual_returns::\n",  annual_returns, '\nannual_sharp::\n', annual_sharp
-
-    logger.info('end analyzer name::%s\t sharp %s\t', name, sharpe_ratio_result)
+    annual_sharp = calc_annual_sharp(calc_daily_returns(wealth))
+    growth_result['g_r_' + name] = g_r

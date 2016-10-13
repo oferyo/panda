@@ -25,15 +25,16 @@ class Portfolio:
         self.total_wealth.name = 'total_wealth  '
         print "end init portfolio cash ", self.cash
 
-    def analyzer_buy_and_hold(self):
-        analyzer.analyze('buy_and_hold', self.total_wealth)
+    def analyzer_buy_and_hold(self, result):
+        analyzer.analyze('buy_and_hold', self.total_wealth, result)
 
 
     @staticmethod
     def set_fractions(num_symbols):
         return np.squeeze(np.ones((1, num_symbols), float) / num_symbols)
 
-    def calc_wealth(self, stocks_data, fees_per_share = 0.005, min_fees = 1, reb_period = 1, partial_param = 1):
+    def calc_wealth(self, stocks_data, fees_per_share, min_fees, reb_period, partial_param, growth_result = None, annual_sharp_result = None):
+        name = 're_' + str(fees_per_share) + "_" + str(min_fees) + "_" + str(reb_period) + "_" + str(partial_param)
         len_data = len(stocks_data.index)
         current_quantities = self.quantities
         rebalanced_wealth = self.wealth.copy()
@@ -44,27 +45,19 @@ class Portfolio:
             row_values = stocks_data[i:i+1].values
             rebalanced_wealth[i: i + 1] = current_quantities * row_values
             current_wealth = np.sum(rebalanced_wealth[i: i + 1].values) + self.cash
-            # print 'current_wealth ', current_wealth, 'cash', self.cash
-            total_rebalanced[i : i+1] = current_wealth
+            total_rebalanced[i: i+1] = current_wealth
             updated_quantities = np.floor((current_wealth * self.fractions) * np.array(1.0 / np.squeeze(row_values)))
-            # logging.info("uq1 %s cq %s ", updated_quantities, current_quantities)
             updated_quantities = np.floor(updated_quantities*partial_param + (1.0 - partial_param)*current_quantities)
-            # logging.info("uq2 %s", updated_quantities)
-
-            # print 'cq', current_quantities, 'uq', updated_quantities, 'v', np.squeeze(row_values)
             change = current_wealth - np.sum((updated_quantities * row_values))
-            # logging.info("change %s", change)
             self.cash = change
             self.pay_fees(current_quantities, updated_quantities, fees_per_share, min_fees)
             current_quantities = updated_quantities
 
         print 'end rebalance'
-        analyzer.analyze('rebalnce', total_rebalanced)
-
-        # self.data = self.data.join(all_quantities)
-        # self.data = self.data.join(total_rebalanced)
-        # self.data.to_csv("all_data.csv")
         print "end cash", self.cash
+        growth, annual_sharp = analyzer.analyze(name, total_rebalanced)
+        growth_result['g_r_' + name] = growth
+        annual_sharp_result['a_s_' + name] = annual_sharp
 
     def pay_fees(self, current_quantities, updated_quantities, fees_per_share, min_fees):
         num_shares = np.sum(np.abs(current_quantities - updated_quantities))
@@ -107,57 +100,36 @@ def run_round(all_stocks, start_time, end_time):
 
     initial_wealth = 100000
     stocks_data = get_and_clean_data(symbols, start_time, end_time)
+    analyzer_result = pd.DataFrame(index=stocks_data.index)
     portfolio = Portfolio(stocks_data, initial_wealth)
 
-    portfolio.analyzer_buy_and_hold()
+    portfolio.analyzer_buy_and_hold(analyzer_result)
     fees = 0.01
 
     logger.info('start no fees D=1')
-    portfolio.calc_wealth(stocks_data, 0.0, 0.0)
+    portfolio.calc_wealth(stocks_data, 0.0, 0.0, 1.0, 1.0, analyzer_result)
 
     logger.info('start with fees D=1')
     portfolio = Portfolio(stocks_data, initial_wealth)
-    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 1.0)
+    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 1.0, analyzer_result)
 
     logger.info('start with fees D=0.5')
     portfolio = Portfolio(stocks_data, initial_wealth)
-    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.5)
+    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.5, analyzer_result)
 
     logger.info('start with fees D=0.01')
     portfolio = Portfolio(stocks_data, initial_wealth)
-    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.5)
+    portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.01, analyzer_result)
 
 
     logger.info("the end")
-
-def init():
-    global sum
-    sum = 0
 
 
 def log_loss(label, pred):
     return -np.mean(label*np.log(pred[:,0]) + (1 - label) * np.log(1.0 - pred[:,0]))
 
 
-class Metric:
-
-    def __init__(self, func):
-        self.f = func
-
-    def activate(self, x, y):
-        return self.f(x,y)
-
-
-
-def foo(x, y):
-    return x+y
-
-
 def main():
-
-    metric = Metric(foo)
-    z = metric.activate(44, 44)
-
     # start_time = datetime.datetime(1980, 10, 1)
     # start_time = datetime.datetime(1980, 10, 1)
     start_time = datetime.datetime(1980, 10, 1)
@@ -176,6 +148,132 @@ def main():
         print 'end_round\t', j
 
     print "the one end"
+
+
+def random_walk_exp():
+    n = 10
+    rounds = 10000000
+    score = 0.0
+    actual_rnd = 0
+    for j in range(rounds):
+        k = random_walk(n)
+        if k >= 0:
+            actual_rnd+=1
+            score+=k
+
+    final = score/actual_rnd
+    print final
+
+
+
+def random_walk(n):
+    score = 0
+    pure_pos = True
+    for i in range(n):
+        score = (score + 1) if np.random.random() >=0.5 else (score-1)
+        if score < 0:
+            pure_pos = False
+            break
+
+    if pure_pos:
+        return score
+    else:
+        return -1
+
+def random_walk_non_neg(n):
+    score = 0
+    for i in range(n):
+        if score == 0:
+            score = 1
+        else:
+            score = (score + 1) if np.random.random() >=0.5 else (score-1)
+
+    return score
+
+
+
+
+def gamadim_check():
+    n = 8
+    success = 0
+    for i in xrange(1000):
+        a = np.random.rand(n)
+        b = np.random.rand(n)
+        h = np.random.rand(1) * (n - 2)
+        mo = -1
+        po = -1
+        for p in itertools.permutations(range(n)):
+            m = run(a, b, h, p)
+            if (m > mo):
+                mo = m
+                po = p
+
+        pa = algo(a, b, h)
+        ma = run(a, b, h, pa)
+        if (mo != ma):
+            print (mo)
+            print (ma)
+            pa = algo(a, b, h)
+            ma = run(a, b, h, pa)
+            print (po)
+            print (pa)
+            print (a)
+            print (b)
+            print (np.argsort(a - b))
+            print (np.argsort(a))
+            print (np.argsort(b))
+            print (h)
+        else:
+            success+=1
+
+    print "success pcg " , success*100/1000
+
+def algo(a, b, h):
+    p = np.argsort(a)
+    A = sum(a)
+    out = []
+    stuck = []
+    for i in p:
+        if A + b[i] > h:
+            A -= a[i]
+            out.append(i)
+        else:
+            # check if all including the failed one can pass
+            all_can_pass = True
+            B = A - a[i]
+            alt_out = []
+            check_if_all = list(out)
+            check_if_all.append(i)
+            while all_can_pass and len(check_if_all) > 0:
+                # find the tallest that can pss now
+                can_pass = filter(lambda j: B + a[j] + b[j] > h, check_if_all)
+                if can_pass:
+                    tallest = np.max((a[can_pass]))
+                    index_tallest = list(a).index(tallest)
+                    check_if_all.remove(index_tallest)
+                    B += tallest
+                    alt_out.insert(0, index_tallest)
+                else:  # if not all can pass append the tallest to the stuck
+                    all_can_pass = False
+                    stuck.append(i)
+            if all_can_pass:
+                A -= a[i]
+                out = list(alt_out)
+
+    return out + stuck
+
+import itertools
+
+def run(a, b, h, p):
+    c = 0
+    A = sum(a)
+    for i in p:
+        if (A + b[i] > h):
+            c = c + 1
+            A = A - a[i]
+        else:
+            break;
+    return c
 
 if __name__ == "__main__":
     # execute only if run as a script
