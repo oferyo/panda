@@ -121,7 +121,7 @@ def run_round(all_stocks, start_time, end_time):
     portfolio = Portfolio(stocks_data, initial_wealth)
     portfolio.calc_wealth(stocks_data, fees, 1.0, 1.0, 0.01, analyzer_result)
 
-
+    analyzer_result.to_csv("a_r.csv")
     logger.info("the end")
 
 
@@ -149,85 +149,69 @@ def main():
 
     print "the one end"
 
-
-def random_walk_exp():
-    n = 10
-    rounds = 10000000
-    score = 0.0
-    actual_rnd = 0
-    for j in range(rounds):
-        k = random_walk(n)
-        if k >= 0:
-            actual_rnd+=1
-            score+=k
-
-    final = score/actual_rnd
-    print final
-
-
-
-def random_walk(n):
-    score = 0
-    pure_pos = True
-    for i in range(n):
-        score = (score + 1) if np.random.random() >=0.5 else (score-1)
-        if score < 0:
-            pure_pos = False
-            break
-
-    if pure_pos:
-        return score
-    else:
-        return -1
-
-def random_walk_non_neg(n):
-    score = 0
-    for i in range(n):
-        if score == 0:
-            score = 1
-        else:
-            score = (score + 1) if np.random.random() >=0.5 else (score-1)
-
-    return score
-
-
-
-
+# a is sholders, b arms, h height
 def gamadim_check():
-    n = 8
-    success = 0
+    n = 7
     for i in xrange(1000):
         a = np.random.rand(n)
         b = np.random.rand(n)
         h = np.random.rand(1) * (n - 2)
         mo = -1
         po = -1
+        #brute force check mo is the optimal count
         for p in itertools.permutations(range(n)):
             m = run(a, b, h, p)
             if (m > mo):
                 mo = m
                 po = p
 
-        pa = algo(a, b, h)
+        pa = david_algo(a, b, h)
         ma = run(a, b, h, pa)
+
+        pofer = algo(a, b, h)
+        mofer = run(a, b, h, pofer)
+
         if (mo != ma):
+            print a
+            print b
+            print np.argsort(a + b)
+
+            pa = david_algo(a, b, h)
+            ma = run(a, b, h, pa)
+
+
             print (mo)
             print (ma)
-            pa = algo(a, b, h)
-            ma = run(a, b, h, pa)
-            print (po)
-            print (pa)
-            print (a)
-            print (b)
-            print (np.argsort(a - b))
-            print (np.argsort(a))
-            print (np.argsort(b))
-            print (h)
+
+# return a permutation
+def david_algo(a, b, h):
+    p = list(np.argsort(a + b))
+    A = sum(a)
+    out = []
+    stuck = []
+    index = 0
+    while index < len(p):
+        i = p[index]
+        index=index+1
+        out.append(i)
+        if A + b[i] > h:
+            A -= a[i]
+        # i cannot pass pick the tallest abd it to stuck
         else:
-            success+=1
+            tallest = np.max((a[out]))
+            index_tallest = list(a).index(tallest)
+            stuck.append(index_tallest)
+            out.remove(index_tallest)
+            #reprocess i
+            if index_tallest != i:
+                A += tallest
+                out.remove(i)
+                index = index - 1
 
-    print "success pcg " , success*100/1000
+    return out + stuck
 
+
+#return a permutation
 def algo(a, b, h):
     p = np.argsort(a)
     A = sum(a)
@@ -237,7 +221,7 @@ def algo(a, b, h):
         if A + b[i] > h:
             A -= a[i]
             out.append(i)
-        else:
+        else: # i cannot pass
             # check if all including the failed one can pass
             all_can_pass = True
             B = A - a[i]
@@ -245,7 +229,7 @@ def algo(a, b, h):
             check_if_all = list(out)
             check_if_all.append(i)
             while all_can_pass and len(check_if_all) > 0:
-                # find the tallest that can pss now
+                # find the tallest that can pass now
                 can_pass = filter(lambda j: B + a[j] + b[j] > h, check_if_all)
                 if can_pass:
                     tallest = np.max((a[can_pass]))
@@ -264,6 +248,8 @@ def algo(a, b, h):
 
 import itertools
 
+
+#check a give permutation
 def run(a, b, h, p):
     c = 0
     A = sum(a)

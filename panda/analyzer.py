@@ -31,8 +31,18 @@ def calc_annual_sharp(daily_returns):
     return (grouped_mean / np.sqrt(grouped_var)) * np.sqrt(252)
 
 
-def calc_max_draw_down():
-    pass
+def calc_max_draw_down(wealth_history, start_date = None, end_date = None):
+    if (start_date):
+        wealth_history = wealth_history[(wealth_history.index > start_date)]
+    max_loss = 0.0
+    #iterate over all pairs and check the max_loss
+    for i in range(len(wealth_history.index)):
+        for j in range(len(wealth_history.index)):
+            loss = wealth_history[j] / wealth_history[i] - 1
+            if loss > max_loss:
+                # print "new max_loss", loss, "time i: ", wealth_history.index[i], "time j: ", wealth_history.index[j]
+                max_loss = loss
+    return max_loss
 
 
 def calc_portfolio_var(returns, n, weights=None):
@@ -49,7 +59,9 @@ def sharpe_ratio(returns, risk_free_rate=0.0):
     var = returns.var()
     return (means - risk_free_rate) / np.sqrt(var)
 
-def analyze(name, wealth, growth_result):
+def analyze(name, wealth, analysis_results):
     g_r = calc_growth_rate(wealth)
-    annual_sharp = calc_annual_sharp(calc_daily_returns(wealth))
-    growth_result['g_r_' + name] = g_r
+    # annual_sharp = calc_annual_sharp(calc_daily_returns(wealth))
+    # max_draw_down = calc_max_draw_down(wealth, '2001-01-01')
+    analysis_results['g_r_' + name] = g_r
+    # analysis_results['m_d_d_' + name] = max_draw_down

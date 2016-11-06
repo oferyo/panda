@@ -1,0 +1,81 @@
+def gamadim_check():
+    n = 8
+    success = 0
+    for i in xrange(1000):
+        a = np.random.rand(n)
+        b = np.random.rand(n)
+        h = np.random.rand(1) * (n - 2)
+        mo = -1
+        po = -1
+        for p in itertools.permutations(range(n)):
+            m = run(a, b, h, p)
+            if (m > mo):
+                mo = m
+                po = p
+
+        pa = algo(a, b, h)
+        ma = run(a, b, h, pa)
+        if (mo != ma):
+            print (mo)
+            print (ma)
+            pa = algo(a, b, h)
+            ma = run(a, b, h, pa)
+            print (po)
+            print (pa)
+            print (a)
+            print (b)
+            print (np.argsort(a - b))
+            print (np.argsort(a))
+            print (np.argsort(b))
+            print (h)
+        else:
+            success+=1
+
+    print "success pcg " , success*100/1000
+
+def algo(a, b, h):
+    p = np.argsort(a)
+    A = sum(a)
+    out = []
+    stuck = []
+    for i in p:
+        if A + b[i] > h:
+            A -= a[i]
+            out.append(i)
+        else:
+            # check if all including the failed one can pass
+            all_can_pass = True
+            B = A - a[i]
+            alt_out = []
+            check_if_all = list(out)
+            check_if_all.append(i)
+            while all_can_pass and len(check_if_all) > 0:
+                # find the tallest that can pss now
+                can_pass = filter(lambda j: B + a[j] + b[j] > h, check_if_all)
+                if can_pass:
+                    tallest = np.max((a[can_pass]))
+                    index_tallest = list(a).index(tallest)
+                    check_if_all.remove(index_tallest)
+                    B += tallest
+                    alt_out.insert(0, index_tallest)
+                else:  # if not all can pass append the tallest to the stuck
+                    all_can_pass = False
+                    stuck.append(i)
+            if all_can_pass:
+                A -= a[i]
+                out = list(alt_out)
+
+    return out + stuck
+
+import itertools
+
+def run(a, b, h, p):
+    c = 0
+    A = sum(a)
+    for i in p:
+        if (A + b[i] > h):
+            c = c + 1
+            A = A - a[i]
+        else:
+            break;
+    return c
