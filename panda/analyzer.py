@@ -9,6 +9,30 @@ class Analyzer:
     def __init__(self):
         pass
 
+    def init(self, stocks_data):
+        self.analysis_results = pd.DataFrame(index=stocks_data.index)
+        self.daily_results = pd.DataFrame(index=stocks_data.index)
+        self.sharp_results = None
+
+
+    def analyze(self, name, wealth):
+        g_r = calc_growth_rate(wealth)
+        annual_sharp = calc_annual_sharp(calc_daily_returns(wealth))
+        if (self.sharp_results is None):
+            self.sharp_results = pd.DataFrame(index=annual_sharp.index)
+        d_r = cumulative_returns(wealth)
+        # max_draw_down = calc_max_draw_down(wealth, '2001-01-01')
+        self.analysis_results['g_r_' + name] = g_r
+
+
+        self.daily_results['g_r_' + name] = d_r
+        self.sharp_results['a_s_' + name] = annual_sharp
+
+    def to_csv(self, name):
+        self.sharp_results.to_csv("sharp" + name)
+        self.analysis_results.iloc[::30, :].to_csv("growth" + name)
+        self.daily_results.iloc[::30, :].to_csv("daily" + name)
+
 
 def calc_daily_returns(wealth):
     # return np.log(wealth / wealth.shift(1))
@@ -18,6 +42,9 @@ def calc_daily_returns(wealth):
 def calc_growth_rate(wealth):
     return np.log(wealth / wealth[0])
 
+
+def cumulative_returns(wealth):
+    return wealth / wealth[0] - 1.0
 
 def calc_annual_returns(daily_returns):
     grouped = daily_returns.groupby(lambda date: date.year).sum()
@@ -59,9 +86,7 @@ def sharpe_ratio(returns, risk_free_rate=0.0):
     var = returns.var()
     return (means - risk_free_rate) / np.sqrt(var)
 
-def analyze(name, wealth, analysis_results):
-    g_r = calc_growth_rate(wealth)
-    # annual_sharp = calc_annual_sharp(calc_daily_returns(wealth))
-    # max_draw_down = calc_max_draw_down(wealth, '2001-01-01')
-    analysis_results['g_r_' + name] = g_r
+
+
+
     # analysis_results['m_d_d_' + name] = max_draw_down
