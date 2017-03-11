@@ -14,6 +14,11 @@ def my_logger(name):
         formatter = logging.Formatter("%(asctime)s::%(levelname)s::%(message)s",
                                       "%Y-%m-%d %H:%M:%S")
 
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+
         fh = logging.FileHandler("panda.log")
         fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
